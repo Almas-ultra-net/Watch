@@ -1,0 +1,25 @@
+{
+  "name": "watch-3d-customizer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "سازنده و سفارشی‌ساز ساعت سه‌بعدی — Three.js + React + WebXR AR",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fontsource/vazirmatn": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}

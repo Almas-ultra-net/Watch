@@ -1,0 +1,21 @@
+# وابستگی‌ها
+node_modules/
+
+# خروجی ساخت
+dist/
+dist-ssr/
+
+# فایل‌های محلی و محرمانه
+*.local
+.env
+.env.*
+
+# لاگ‌ها و سیستم‌عامل
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+
+# ابزارهای ویرایش
+.idea/
+.vscode/
