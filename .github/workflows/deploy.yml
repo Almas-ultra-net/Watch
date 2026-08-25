@@ -1,0 +1,82 @@
+name: Build & Deploy to GitHub Pages
+
+# پس از هر push به شاخهٔ main (یا اجرای دستی) اجرا می‌شود:
+# تست → ساخت → انتشار خروجی به شاخهٔ gh-pages → فعال‌سازی GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: تست و ساخت پروژه
+    runs-on: ubuntu-latest
+    steps:
+      - name: دریافت کد
+        uses: actions/checkout@v4
+
+      - name: راه‌اندازی Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: نصب وابستگی‌ها
+        run: npm ci
+
+      - name: اجرای تست‌ها
+        run: npm test
+
+      - name: ساخت نسخهٔ نهایی
+        run: npm run build
+
+      - name: بارگذاری خروجی ساخت
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: dist
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: انتشار به شاخهٔ gh-pages و GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: دریافت خروجی ساخت
+        uses: actions/download-artifact@v4
+        with:
+          name: site-build
+          path: dist
+
+      - name: انتشار پوشهٔ dist به شاخهٔ gh-pages
+        uses: peaceiris/action-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: dist
+          force_orphan: true
+          commit_message: 'deploy: ${{ github.sha }}'
+          user_name: 'github-actions[bot]'
+          user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: فعال‌سازی GitHub Pages از شاخهٔ gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          # اگر Pages هنوز فعال نباشد ساخته می‌شود؛ اگر هست، منبعش به gh-pages به‌روزرسانی می‌شود
+          gh api -X POST "repos/$GITHUB_REPOSITORY/pages" \
+            -f "source[branch]=gh-pages" -f "source[path]=/" 2>/dev/null \
+          || gh api -X PUT "repos/$GITHUB_REPOSITORY/pages" \
+            -F "source[branch]=gh-pages" -F "source[path]=/" 2>/dev/null \
+          || echo "::warning::روی این مخزن Pages از قبل با حالت Workflow فعال است؛ منبع را دستی روی شاخهٔ gh-pages تنظیم کنید."
