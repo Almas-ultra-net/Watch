@@ -58,23 +58,26 @@ jobs:
           name: site-build
           path: dist
 
+      # بدون اکشن شخص ثالث؛ مستقیم با git و GITHUB_TOKEN منتشر می‌شود
       - name: انتشار پوشهٔ dist به شاخهٔ gh-pages
-        uses: peaceiris/action-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: dist
-          force_orphan: true
-          commit_message: 'deploy: ${{ github.sha }}'
-          user_name: 'github-actions[bot]'
-          user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b gh-pages .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          touch .nojekyll
+          git add .nojekyll
+          git commit -q -m "deploy: ${GITHUB_SHA}"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
 
       - name: فعال‌سازی GitHub Pages از شاخهٔ gh-pages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -x
-          # اگر Pages هنوز فعال نباشد ساخته می‌شود؛ اگر هست، منبعش به gh-pages به‌روزرسانی می‌شود
           gh api -X POST "repos/$GITHUB_REPOSITORY/pages" \
             -f "source[branch]=gh-pages" -f "source[path]=/" 2>/dev/null \
           || gh api -X PUT "repos/$GITHUB_REPOSITORY/pages" \
